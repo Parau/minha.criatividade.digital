@@ -5,16 +5,25 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig = {
-  output: 'export', // Enables static export
-  basePath: '/minha.criatividade.digital', 
+  output: 'export',
+  basePath: '/minha.criatividade.digital',
+  assetPrefix: '/minha.criatividade.digital/',
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
   },
   reactStrictMode: false,
   eslint: {
     ignoreDuringBuilds: true,
   },
-  trailingSlash: false, // For GitHub Pages compatibility
+  trailingSlash: false,
+  // Optional: Add these if you need better optimization
+  webpack: (config, { isServer }) => {
+    // Add any custom webpack configs if needed
+    return config;
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  }
 };
 
 export default withBundleAnalyzer(nextConfig);
