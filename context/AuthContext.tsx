@@ -5,9 +5,15 @@ import {
   getAuth,
   signInWithPopup,
   GoogleAuthProvider,
+  OAuthProvider,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   User as FirebaseUser
 } from 'firebase/auth';
 import firebaseApp from '../firebase';
+import { showNotification } from '@mantine/notifications';
+import { useRouter } from 'next/router';
 
 // Types and Interfaces
 interface AuthUser {
@@ -18,7 +24,7 @@ interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
-  login: () => Promise<void>;
+  login: (provider: 'Google' | 'Microsoft' | 'Email', email?: string) => Promise<void>;
   logout: () => Promise<void>;
   error: string | null;
 }
@@ -53,6 +59,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
@@ -72,13 +79,61 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     return () => unsubscribe();
   }, []);
 
-  const login = async () => {
-    console.log("Função login acionada");
+  const login = async (provider: 'Google' | 'Microsoft' | 'Email', email?: string) => {
+    console.log(`Função login acionada para ${provider}`);
     try {
       setError(null);
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      switch (provider) {
+        case 'Google':
+          await signInWithPopup(auth, new GoogleAuthProvider());
+          break;
+        case 'Microsoft':
+          const microsoftProvider = new OAuthProvider('microsoft.com');
+          await signInWithPopup(auth, microsoftProvider);
+          break;
+        case 'Email':
+          if (!email) throw new Error('Email is required for email link login');
+          const actionCodeSettings = {
+            url: `${window.location.origin}/loginlink`,
+            handleCodeInApp: true,
+          };
+          await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+          window.localStorage.setItem('emailForSignIn', email);
+          showNotification({
+            title: 'Link de login enviado',
+            message: `Um link de login foi enviado para ${email}. Verifique sua caixa de entrada.`,
+            color: 'green',
+          });
+          break;
+        default:
+          throw new Error('Provider não suportado');
+      }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred during login');
+      switch (error.code) {
+        case 'auth/network-request-failed':
+          showNotification({
+            title: 'Problema de conexão',
+            message: 'Por favor, verifique sua internet e tente novamente.',
+            color: 'red',
+          });
+          break;
+        case 'auth/admin-restricted-operation':
+          showNotification({
+            title: 'Acesso restrito',
+            message: 'Nenhuma licença do CRIATIVIDADE.digital foi encontrada para este e-mail.',
+            color: 'red',
+          });
+          break;
+        case 'auth/popup-blocked':
+          showNotification({
+            title: 'Janela de login bloqueada',
+            message: 'O navegador bloqueou a janela de login. Por favor, ajuste as configurações do navegador para permitir a abertura de janelas pop-up para fazer o login.',
+            color: 'red',
+          });
+          break;
+        default:
+          console.error(error instanceof Error ? error.message : 'An error occurred during login');
+      }
       throw error;
     }
   };
@@ -89,7 +144,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
       await signOut(auth);
       setUser(null);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred during logout');
+      console.error(error instanceof Error ? error.message : 'An error occurred during logout');
       throw error;
     }
   };
