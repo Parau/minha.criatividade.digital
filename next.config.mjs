@@ -6,8 +6,8 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const nextConfig = {
   output: 'export',
-  basePath: '/minha.criatividade.digital',
-  assetPrefix: '/minha.criatividade.digital/',
+  //basePath: '/minha.criatividade.digital',
+  //assetPrefix: '/minha.criatividade.digital',
   images: {
     unoptimized: true,
   },
