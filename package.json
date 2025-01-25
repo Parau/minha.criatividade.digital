@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "analyze": "ANALYZE=true next build",
-    "start": "next start",
     "export": "next build && next export",
+    "start": "npx serve@latest out",
+    "analyze": "ANALYZE=true next build",
     "typecheck": "tsc --noEmit",
     "lint": "npm run eslint && npm run stylelint",
     "eslint": "next lint",
