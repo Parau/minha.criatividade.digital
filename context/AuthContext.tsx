@@ -109,30 +109,34 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
           throw new Error('Provider não suportado');
       }
     } catch (error) {
-      switch (error.code) {
-        case 'auth/network-request-failed':
-          showNotification({
-            title: 'Problema de conexão',
-            message: 'Por favor, verifique sua internet e tente novamente.',
-            color: 'red',
-          });
-          break;
-        case 'auth/admin-restricted-operation':
-          showNotification({
-            title: 'Acesso restrito',
-            message: 'Nenhuma licença do CRIATIVIDADE.digital foi encontrada para este e-mail.',
-            color: 'red',
-          });
-          break;
-        case 'auth/popup-blocked':
-          showNotification({
-            title: 'Janela de login bloqueada',
-            message: 'O navegador bloqueou a janela de login. Por favor, ajuste as configurações do navegador para permitir a abertura de janelas pop-up para fazer o login.',
-            color: 'red',
-          });
-          break;
-        default:
-          console.error(error instanceof Error ? error.message : 'An error occurred during login');
+      if (error instanceof Error && 'code' in error) {
+        switch (error.code) {
+          case 'auth/network-request-failed':
+            showNotification({
+              title: 'Problema de conexão',
+              message: 'Por favor, verifique sua internet e tente novamente.',
+              color: 'red',
+            });
+            break;
+          case 'auth/admin-restricted-operation':
+            showNotification({
+              title: 'Acesso restrito',
+              message: 'Nenhuma licença do CRIATIVIDADE.digital foi encontrada para este e-mail.',
+              color: 'red',
+            });
+            break;
+          case 'auth/popup-blocked':
+            showNotification({
+              title: 'Janela de login bloqueada',
+              message: 'O navegador bloqueou a janela de login. Por favor, ajuste as configurações do navegador para permitir a abertura de janelas pop-up para fazer o login.',
+              color: 'red',
+            });
+            break;
+          default:
+            console.error(error.message);
+        }
+      } else {
+        console.error('An unknown error occurred during login');
       }
       throw error;
     }
