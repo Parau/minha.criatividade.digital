@@ -40,6 +40,7 @@ export function AuthenticationForm({ handleLogin, ...props }: AuthenticationForm
       return;
     }
     setEmailError('');
+    console.log(`Função handleEmailClick acionada para ${email}`);
     handleLogin('Email', email);
   };
 
