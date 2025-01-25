@@ -1,19 +1,20 @@
 import React from 'react';
-import { Meta, Story } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import { AuthenticationForm } from './AuthenticationForm';
 import { PaperProps } from '@mantine/core';
 
 export default {
   title: 'Components/AuthenticationForm',
   component: AuthenticationForm,
-} as Meta;
+} as Meta<PaperProps>;
 
-const Template: Story<PaperProps> = (args) => <AuthenticationForm {...args} />;
+type Story = StoryObj<PaperProps>;
 
-export const Default = Template.bind({});
-Default.args = {
-  radius: 'md',
-  p: 'xl',
-  withBorder: true,
+export const Default: Story = {
+  args: {
+    radius: 'md',
+    p: 'xl',
+    withBorder: true,
+  },
 };
 
