@@ -92,6 +92,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
           await signInWithPopup(auth, microsoftProvider);
           break;
         case 'Email':
+          console.log('Email:', email);
           if (!email) throw new Error('Email is required for email link login');
           const actionCodeSettings = {
             url: `${window.location.origin}/loginlink`,
