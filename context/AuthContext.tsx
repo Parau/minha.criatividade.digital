@@ -1,3 +1,4 @@
+// AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
   onAuthStateChanged,
@@ -11,7 +12,7 @@ import {
   signInWithEmailLink,
   User as FirebaseUser
 } from 'firebase/auth';
-import firebaseApp from '../firebase';
+import { firebaseApp } from '../firebase'; // Import firebaseApp
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 
@@ -24,6 +25,7 @@ interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
+  firebaseUser: FirebaseUser | null; // Adicionar firebaseUser ao contexto
   login: (provider: 'Google' | 'Microsoft' | 'Email', email?: string) => Promise<void>;
   logout: () => Promise<void>;
   error: string | null;
@@ -41,11 +43,12 @@ const LoadingSpinner = () => (
 );
 
 // Initialize Firebase Auth
-const auth = getAuth(firebaseApp);
+const auth = getAuth(firebaseApp); // Use firebaseApp
 
 // Create Context with default values
 export const AuthContext = createContext<AuthContextType>({
   user: null,
+  firebaseUser: null, // Adicionar valor padrão
   login: async () => {},
   logout: async () => {},
   error: null
@@ -57,20 +60,24 @@ export const useAuthContext = () => useContext(AuthContext);
 // Auth Context Provider Component
 export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null); // Adicionar estado para firebaseUser
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      console.log('onAuthStateChanged');
       if (firebaseUser) {
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
         });
+        setFirebaseUser(firebaseUser); // Definir firebaseUser
       } else {
         setUser(null);
+        setFirebaseUser(null); // Limpar firebaseUser
       }
       setLoading(false);
       setError(null);
@@ -155,7 +162,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, error }}>
+    <AuthContext.Provider value={{ user, firebaseUser, login, logout, error }}>
       {loading ? <LoadingSpinner /> : children}
     </AuthContext.Provider>
   );

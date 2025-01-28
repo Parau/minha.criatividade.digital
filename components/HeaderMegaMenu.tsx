@@ -1,4 +1,3 @@
-
 import {
   IconBook,
   IconChartPie3,
@@ -93,7 +92,7 @@ export function HeaderMegaMenu() {
   ));
 
   return (
-    <Box pb={120}>
+    <Box>
       <header className={classes.header}>
         <Group justify="space-between" h="100%">
           <LogoCriatividadeDigital />
