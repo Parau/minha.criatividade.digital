@@ -166,7 +166,7 @@ const Conquistas = () => {
     if (Array.isArray(conquistas) && conquistas.length === 0) {
       return (
         <Alert icon={<IconAlertCircle size={16} />} color="yellow">
-          Você ainda não possui conquistas
+          Nenhuma conquista registrada ainda. Que tal começar a colecioná-las?
         </Alert>
       );
     }
