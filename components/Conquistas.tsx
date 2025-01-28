@@ -145,7 +145,7 @@ const Conquistas = () => {
 
     return conquistas.map((conquista) => (
       <Card key={conquista.id} shadow="sm" p="md" mb="sm">
-        <Group position="apart">
+        <Group justify="space-between">
           <Text weight={500} size="lg">
             {getIconForType(conquista.id)}
             {conquista.id}
@@ -165,7 +165,7 @@ const Conquistas = () => {
   return (
     <Container size="md" px="xs">
       <Card shadow="sm" p="lg">
-        <Group position="apart" mb="md">
+        <Group justify="space-between" mb="md">
           <Text weight={500} size="xl">Conquistas</Text>
           {firebaseUser && (
             <Tooltip label="Atualizar conquistas" withArrow position="left">
