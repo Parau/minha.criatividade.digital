@@ -97,24 +97,16 @@ const Conquistas = () => {
       setConquistas(result.data.conquistas);
     } catch (err) {
       const error = err as FirebaseFunctionError;
-      console.error('Erro ao buscar conquistas:', error);
-
-      // Melhorar a verificação do erro 404/not-found
-      if (
-        error.code === 'not-found' || 
-        error.httpErrorCode?.status === 404 ||
-        error.message.includes('not-found') // Adicionar verificação da mensagem
-      ) {
-        console.log('Tratando caso 404/not-found:', error); // Log mais detalhado
-        setHasError(false);
-        setConquistas([]);
-        return;
-      }
+      console.error('Erro ao buscar conquistas (error.code):', error.code);
 
       // Para outros erros
       switch (error.code) {
         case 'unauthenticated':
           router.push('/login');
+          break;
+        case 'functions/not-found':
+          setHasError(false);
+          setConquistas([]);
           break;
         case 'internal':
         default:
@@ -217,7 +209,7 @@ const Conquistas = () => {
           {firebaseUser && (
             <Tooltip label="Atualizar conquistas" withArrow position="left">
               <Button 
-                onClick={() => alert('clique')} 
+                onClick={() => fetchConquistas({ forceRefresh: true })} 
                 loading={loading}
                 variant="subtle"
                 size="sm"
