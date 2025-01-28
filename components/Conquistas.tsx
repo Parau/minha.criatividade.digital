@@ -8,6 +8,8 @@ import { IconAlertCircle, IconTrophy, IconRefresh, IconCertificate } from '@tabl
 import { useRouter } from 'next/router';
 import { showNotification } from '@mantine/notifications';
 
+/// https://criatividade.digital/conquistas/docs/assets/ChatGPT/certificado/Explorador/ChatGPTExplorador-01.png
+
 // Tipos para as conquistas
 interface Conquista {
   id: string;
