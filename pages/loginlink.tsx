@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { showNotification } from '@mantine/notifications';
-import firebaseApp from '../firebase';
+import { firebaseApp } from '../firebase';
 
 const LoginLinkPage = () => {
   const router = useRouter();
