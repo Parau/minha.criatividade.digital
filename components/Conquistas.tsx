@@ -112,7 +112,7 @@ const Conquistas = () => {
         case 'internal':
         default:
           setHasError(true);
-          setConquistas(null); // Mantém null em vez de array vazio
+          setConquistas([]); // Mantém null em vez de array vazio
           showNotification({
             title: 'Falha ao carregar conquistas',
             message: 'Desculpe! Ocorreu uma falha durante a consulta das suas conquistas. Tente novamente mais tarde.',
