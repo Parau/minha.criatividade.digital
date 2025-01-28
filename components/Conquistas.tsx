@@ -67,8 +67,8 @@ const Conquistas = () => {
   };
 
   const fetchConquistas = async (options: FetchOptions = {}) => {
-    setHasError(false); // Reset error state
     console.log('Iniciando busca das conquistas...');
+    setHasError(false); // Reset error state
     if (!firebaseUser) return;
     
     // Verifica cache se não for forceRefresh
@@ -159,7 +159,7 @@ const Conquistas = () => {
     if (loading) {
       return (
         <Alert icon={<IconAlertCircle size={16} />} color="blue">
-          Carregando suas conquistas...
+          Carregando suas Conquistas...
         </Alert>
       );
     }
