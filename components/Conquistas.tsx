@@ -95,21 +95,22 @@ const Conquistas = () => {
       const error = err as FirebaseFunctionError;
       console.error('Erro ao buscar conquistas:', error);
 
+      // Verificar se é um erro HTTP
+      if (error.httpErrorCode?.status === 404 || error.code === 'not-found') {
+        // Caso específico: usuário não tem conquistas
+        setConquistas([]);
+        return;
+      }
+
+      // Para outros erros
       switch (error.code) {
         case 'unauthenticated':
-          // Usuário não autenticado, redirecionar para login
           router.push('/login');
-          break;
-        case 'not-found':
-          // Usuário não tem conquistas ainda
-          setConquistas([]);
           break;
         case 'internal':
         default:
-          // Erro interno ou inesperado
           setHasError(true);
           setConquistas(null); // Mantém null em vez de array vazio
-          console.error('Erro interno ao buscar conquistas:', error.message);
           showNotification({
             title: 'Falha ao carregar conquistas',
             message: 'Desculpe! Ocorreu uma falha durante a consulta das suas conquistas. Tente novamente mais tarde.',
