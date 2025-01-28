@@ -98,6 +98,8 @@ const Conquistas = () => {
       // Verificar se é um erro HTTP
       if (error.httpErrorCode?.status === 404 || error.code === 'not-found') {
         // Caso específico: usuário não tem conquistas
+        console.log('Trantando caso 404.');
+        setHasError(false);
         setConquistas([]);
         return;
       }
