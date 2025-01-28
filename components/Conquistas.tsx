@@ -22,9 +22,13 @@ interface FetchOptions {
 }
 
 interface FirebaseFunctionError {
-  code?: string;
+  code: 'unauthenticated' | 'not-found' | 'internal';
   message: string;
   details?: unknown;
+  httpErrorCode?: {
+    status: number;
+    canonicalName: string;
+  };
 }
 
 const BASE_CACHE_KEY = 'conquistas';
@@ -87,8 +91,21 @@ const Conquistas = () => {
     } catch (err) {
       const error = err as FirebaseFunctionError;
       console.error('Erro ao buscar conquistas:', error);
-      if ('details' in error) {
-        console.error('Error details:', error.details);
+
+      switch (error.code) {
+        case 'unauthenticated':
+          // Usuário não autenticado, redirecionar para login
+          router.push('/login');
+          break;
+        case 'not-found':
+          // Usuário não tem conquistas ainda
+          setConquistas([]);
+          break;
+        case 'internal':
+        default:
+          // Erro interno ou inesperado
+          console.error('Erro interno ao buscar conquistas:', error.message);
+          // Opcional: mostrar notificação de erro para o usuário
       }
     } finally {
       setLoading(false);
