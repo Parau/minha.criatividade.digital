@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev && yarn type-check",
     "build": "next build",
     "export": "next build && next export",
     "start": "npx serve@latest out",
@@ -18,7 +18,8 @@
     "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
     "test": "npm run prettier:check && npm run lint && npm run typecheck && npm run jest",
     "storybook": "storybook dev -p 6006 --debug-webpack",
-    "storybook:build": "storybook build"
+    "storybook:build": "storybook build",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@mantine/core": "7.16.1",

@@ -21,6 +21,12 @@ interface FetchOptions {
   forceRefresh?: boolean;
 }
 
+interface FirebaseFunctionError {
+  code?: string;
+  message: string;
+  details?: unknown;
+}
+
 const BASE_CACHE_KEY = 'conquistas';
 
 const Conquistas = () => {
@@ -78,9 +84,10 @@ const Conquistas = () => {
       // Armazena no cache e atualiza estado
       setCacheData(result.data.conquistas);
       setConquistas(result.data.conquistas);
-    } catch (error) {
+    } catch (err) {
+      const error = err as FirebaseFunctionError;
       console.error('Erro ao buscar conquistas:', error);
-      if (error.details) {
+      if ('details' in error) {
         console.error('Error details:', error.details);
       }
     } finally {
