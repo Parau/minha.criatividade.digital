@@ -95,10 +95,13 @@ const Conquistas = () => {
       const error = err as FirebaseFunctionError;
       console.error('Erro ao buscar conquistas:', error);
 
-      // Verificar se é um erro HTTP
-      if (error.httpErrorCode?.status === 404 || error.code === 'not-found') {
-        // Caso específico: usuário não tem conquistas
-        console.log('Trantando caso 404.');
+      // Melhorar a verificação do erro 404/not-found
+      if (
+        error.code === 'not-found' || 
+        error.httpErrorCode?.status === 404 ||
+        error.message.includes('not-found') // Adicionar verificação da mensagem
+      ) {
+        console.log('Tratando caso 404/not-found:', error); // Log mais detalhado
         setHasError(false);
         setConquistas([]);
         return;
