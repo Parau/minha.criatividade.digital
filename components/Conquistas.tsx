@@ -105,6 +105,7 @@ const Conquistas = () => {
           router.push('/login');
           break;
         case 'functions/not-found':
+          console.log('Definindo que não tem conquistas');
           setHasError(false);
           setConquistas([]);
           break;
@@ -182,23 +183,30 @@ const Conquistas = () => {
       );
     }
 
-    return conquistas.map((conquista) => (
-      <Card key={conquista.id} shadow="sm" p="md" mb="sm">
-        <Group justify="space-between">
-          <Text fw={500} size="lg">
-            {getIconForType(conquista.id)}
-            {conquista.id}
-          </Text>
-        </Group>
-        <Group gap="sm" mt="md">
-          {conquista.IDs.map((id) => (
-            <Badge key={id} variant="filled" size="lg">
-              {id}
-            </Badge>
-          ))}
-        </Group>
-      </Card>
-    ));
+    return conquistas.map((conquista) => {
+      // Se não houver IDs ou array vazio, pula este tipo de conquista
+      if (!conquista.IDs || conquista.IDs.length === 0) {
+        return null;
+      }
+
+      return (
+        <Card key={conquista.id} shadow="sm" p="md" mb="sm">
+          <Group justify="space-between">
+            <Text fw={500} size="lg">
+              {getIconForType(conquista.id)}
+              {conquista.id}
+            </Text>
+          </Group>
+          <Group gap="sm" mt="md">
+            {conquista.IDs.map((id) => (
+              <Badge key={id} variant="filled" size="lg">
+                {id}
+              </Badge>
+            ))}
+          </Group>
+        </Card>
+      );
+    }).filter(Boolean); // Remove null items from render
   };
 
   return (
