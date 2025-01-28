@@ -38,6 +38,7 @@ const Conquistas = () => {
   const { firebaseUser } = useAuthContext();
   const [conquistas, setConquistas] = useState<Conquista[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const router = useRouter();
 
   const getCacheKey = () => {
@@ -66,6 +67,7 @@ const Conquistas = () => {
   };
 
   const fetchConquistas = async (options: FetchOptions = {}) => {
+    setHasError(false); // Reset error state
     if (!firebaseUser) return;
     
     // Verifica cache se não for forceRefresh
@@ -105,7 +107,8 @@ const Conquistas = () => {
         case 'internal':
         default:
           // Erro interno ou inesperado
-          setConquistas([]); // Zera o vetor de conquistas
+          setHasError(true);
+          setConquistas(null); // Mantém null em vez de array vazio
           console.error('Erro interno ao buscar conquistas:', error.message);
           showNotification({
             title: 'Falha ao carregar conquistas',
@@ -147,6 +150,14 @@ const Conquistas = () => {
       return (
         <Alert icon={<IconAlertCircle size={16} />} color="blue">
           Carregando suas conquistas...
+        </Alert>
+      );
+    }
+
+    if (hasError) {
+      return (
+        <Alert icon={<IconAlertCircle size={16} />} color="red">
+          Erro ao carregar conquistas. Tente novamente mais tarde.
         </Alert>
       );
     }
