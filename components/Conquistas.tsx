@@ -6,6 +6,7 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from '../firebase';
 import { IconAlertCircle, IconTrophy, IconRefresh, IconCertificate } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
+import { showNotification } from '@mantine/notifications';
 
 // Tipos para as conquistas
 interface Conquista {
@@ -104,8 +105,14 @@ const Conquistas = () => {
         case 'internal':
         default:
           // Erro interno ou inesperado
+          setConquistas([]); // Zera o vetor de conquistas
           console.error('Erro interno ao buscar conquistas:', error.message);
-          // Opcional: mostrar notificação de erro para o usuário
+          showNotification({
+            title: 'Falha ao carregar conquistas',
+            message: 'Desculpe! Ocorreu uma falha durante a consulta das suas conquistas. Tente novamente mais tarde.',
+            color: 'red',
+            icon: <IconAlertCircle size={16} />
+          });
       }
     } finally {
       setLoading(false);
@@ -144,18 +151,20 @@ const Conquistas = () => {
       );
     }
 
-    if (!conquistas) {
+    // Array vazio significa sem conquistas ou erro
+    if (Array.isArray(conquistas) && conquistas.length === 0) {
       return (
-        <Alert icon={<IconAlertCircle size={16} />} color="blue">
-          Aguarde, carregando...
+        <Alert icon={<IconAlertCircle size={16} />} color="yellow">
+          Você ainda não possui conquistas
         </Alert>
       );
     }
 
-    if (conquistas.length === 0) {
+    // Null significa que ainda não carregou
+    if (!conquistas) {
       return (
-        <Alert icon={<IconAlertCircle size={16} />} color="yellow">
-          Você ainda não possui conquistas
+        <Alert icon={<IconAlertCircle size={16} />} color="blue">
+          Aguarde, carregando...
         </Alert>
       );
     }
