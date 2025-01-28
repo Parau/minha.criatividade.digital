@@ -146,12 +146,12 @@ const Conquistas = () => {
     return conquistas.map((conquista) => (
       <Card key={conquista.id} shadow="sm" p="md" mb="sm">
         <Group justify="space-between">
-          <Text weight={500} size="lg">
+          <Text fw={500} size="lg">
             {getIconForType(conquista.id)}
             {conquista.id}
           </Text>
         </Group>
-        <Group spacing={8} mt="md">
+        <Group gap="sm" mt="md">
           {conquista.IDs.map((id) => (
             <Badge key={id} variant="filled" size="lg">
               {id}
@@ -166,7 +166,7 @@ const Conquistas = () => {
     <Container size="md" px="xs">
       <Card shadow="sm" p="lg">
         <Group justify="space-between" mb="md">
-          <Text weight={500} size="xl">Conquistas</Text>
+          <Text fw={500} size="xl">Conquistas</Text>
           {firebaseUser && (
             <Tooltip label="Atualizar conquistas" withArrow position="left">
               <Button 
