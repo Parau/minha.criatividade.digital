@@ -159,7 +159,7 @@ const Conquistas = () => {
     if (loading) {
       return (
         <Alert icon={<IconAlertCircle size={16} />} color="blue">
-          Carregando suas Conquistas...
+          Carregando suas conquistas...
         </Alert>
       );
     }
@@ -217,7 +217,7 @@ const Conquistas = () => {
           {firebaseUser && (
             <Tooltip label="Atualizar conquistas" withArrow position="left">
               <Button 
-                onClick={() => fetchConquistas({ forceRefresh: true })} 
+                onClick={() => alert('clique')} 
                 loading={loading}
                 variant="subtle"
                 size="sm"
