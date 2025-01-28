@@ -23,7 +23,7 @@ interface FetchOptions {
 }
 
 interface FirebaseFunctionError {
-  code: 'unauthenticated' | 'not-found' | 'internal';
+  code: 'unauthenticated' | 'not-found' | 'internal' | 'functions/not-found';
   message: string;
   details?: unknown;
   httpErrorCode?: {
