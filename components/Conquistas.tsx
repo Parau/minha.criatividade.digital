@@ -68,19 +68,23 @@ const Conquistas = () => {
 
   const fetchConquistas = async (options: FetchOptions = {}) => {
     setHasError(false); // Reset error state
+    console.log('Iniciando busca das conquistas...');
     if (!firebaseUser) return;
     
     // Verifica cache se não for forceRefresh
     if (!options.forceRefresh) {
+      console.log('Identificado opção de leitura da cache.');
       const cachedData = getCachedData();
       if (cachedData) {
         setConquistas(cachedData);
-        console.log('Usando cache de conquistas');
+        console.log('Lendo da cache browser.');
         return;
       }
-    } else {
-      console.log('Acessando o servidor para as conquistas');
+      else {
+        console.log('Não existem dados na cache');
+      }
     }
+    console.log('Acessando o servidor para as conquistas');
     
     setLoading(true);
     try {
