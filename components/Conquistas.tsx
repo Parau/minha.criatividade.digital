@@ -8,24 +8,38 @@ import { IconAlertCircle, IconTrophy, IconRefresh, IconCertificate, IconEye, Ico
 import { useRouter } from 'next/router';
 import { showNotification } from '@mantine/notifications';
 
-/// https://criatividade.digital/conquistas/docs/assets/ChatGPT/certificado/Explorador/ChatGPTExplorador-01.png
-
 // Tipos para as conquistas
 interface Conquista {
   id: string;
   IDs: string[];
 }
 
-const urlBadges = {
-  ChatGPTCurioso: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Curioso/",
-  ChatGPTIniciante: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Iniciante/",
-  ChatGPTExplorador: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Explorador/"
-} as const; 
+interface ConquistaItem {
+  nome: string;
+  url: string;
+}
 
-const urlCertificados = {
-  ChatGPTExplorador: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/certificado/Explorador/"
+const urlBadges: Record<string, ConquistaItem> = {
+  ChatGPTCurioso: {
+    nome: "ChatGPT Curioso",
+    url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Curioso/"
+  },
+  ChatGPTIniciante: {
+    nome: "ChatGPT Iniciante",
+    url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Iniciante/"
+  },
+  ChatGPTExplorador: {
+    nome: "ChatGPT Explorador",
+    url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Explorador/"
+  }
 } as const;
 
+const urlCertificados: Record<string, ConquistaItem> = {
+  ChatGPTExplorador: {
+    nome: "Curso ChatGPT - Módulo:Explorador",
+    url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/certificado/Explorador/"
+  }
+} as const;
 
 interface ConquistasResponse {
   conquistas: Conquista[];
@@ -174,12 +188,22 @@ const Conquistas = () => {
 
   const getUrlForItem = (id: string, type: string): string | undefined => {
     if (type === 'Badges') {
-      return urlBadges[id as keyof typeof urlBadges];
+      return urlBadges[id as keyof typeof urlBadges]?.url;
     }
     if (type === 'Certificados') {
-      return urlCertificados[id as keyof typeof urlCertificados];
+      return urlCertificados[id as keyof typeof urlCertificados]?.url;
     }
     return undefined;
+  };
+
+  const getNomeForItem = (id: string, type: string): string => {
+    if (type === 'Badges') {
+      return urlBadges[id as keyof typeof urlBadges]?.nome || id;
+    }
+    if (type === 'Certificados') {
+      return urlCertificados[id as keyof typeof urlCertificados]?.nome || id;
+    }
+    return id;
   };
 
   const handleVisualize = (id: string, type: string) => {
@@ -243,7 +267,7 @@ const Conquistas = () => {
 
   const renderBadgeWithMenu = (id: string, type: string) => (
     <Menu 
-      key={`menu-${id}`}  // Adicionada key no componente pai
+      key={`menu-${id}`}
       shadow="md" 
       width={200} 
       position="bottom-start"
@@ -254,10 +278,9 @@ const Conquistas = () => {
           style={{ cursor: 'pointer' }}
           {...getBadgeStyle(type)}
         >
-          {id}
+          {getNomeForItem(id, type)}
         </Badge>
       </Menu.Target>
-
       <Menu.Dropdown>
         <Menu.Item 
           leftSection={<IconEye size={14} />}
