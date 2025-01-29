@@ -294,7 +294,7 @@ const Conquistas = () => {
     const date = new Date(timestamp._seconds * 1000);
     const issueYear = date.getFullYear();
     const issueMonth = date.getMonth() + 1; // getMonth() returns 0-11
-
+    
     const baseUrl = getUrlForItem(id, type);
     if (!baseUrl) {
       console.error('URL não encontrada');
