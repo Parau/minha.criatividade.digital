@@ -1,4 +1,5 @@
 // Conquistas.tsx
+// Para implementar a funcionalidade de geração do link de inclusão no linkedin foi usado esta documentacao: https://addtoprofile.linkedin.com/
 import React, { useState, useEffect } from 'react';
 import { Card, Text, Button, Group, Badge, Alert, Tooltip, Container, Box, Menu } from '@mantine/core';
 import { useAuthContext } from '../context/AuthContext';
@@ -9,34 +10,44 @@ import { useRouter } from 'next/router';
 import { showNotification } from '@mantine/notifications';
 
 // Tipos para as conquistas
+interface Timestamp {
+  _seconds: number;
+  _nanoseconds: number;
+}
+
 interface Conquista {
   id: string;
-  IDs: string[];
+  [key: string]: string | Timestamp; // Dynamic keys for achievements
 }
 
 interface ConquistaItem {
   nome: string;
+  nomeLinkedin: string;
   url: string;
 }
 
 const urlBadges: Record<string, ConquistaItem> = {
   ChatGPTCurioso: {
     nome: "ChatGPT Curioso",
+    nomeLinkedin: "Badge: ChatGPT Curioso",
     url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Curioso/"
   },
   ChatGPTIniciante: {
     nome: "ChatGPT Iniciante",
+    nomeLinkedin: "ChatGPT Iniciante",
     url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Iniciante/"
   },
   ChatGPTExplorador: {
     nome: "ChatGPT Explorador",
+    nomeLinkedin: "ChatGPT Explorador",
     url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/badge/Explorador/"
   }
 } as const;
 
 const urlCertificados: Record<string, ConquistaItem> = {
   ChatGPTExplorador: {
-    nome: "Curso ChatGPT - Módulo:Explorador",
+    nome: "Curso ChatGPT - Módulo: Explorador",
+    nomeLinkedin: "Curso ChatGPT - Módulo: Explorador",
     url: "https://criatividade.digital/conquistas/docs/assets/ChatGPT/certificado/Explorador/"
   }
 } as const;
@@ -60,6 +71,8 @@ interface FirebaseFunctionError {
 }
 
 const BASE_CACHE_KEY = 'conquistas';
+
+const organizationId = "106310315";
 
 const Conquistas = () => {
   const { firebaseUser } = useAuthContext();
@@ -210,11 +223,11 @@ const Conquistas = () => {
     const baseUrl = getUrlForItem(id, type);
     console.log(`Visualizando ${type} - ${id}`);
     if (baseUrl) {
-      window.open(`${baseUrl}${firebaseUser?.uid || ''}.pdf`, '_blank');
+      window.open(`${baseUrl}${firebaseUser?.uid || ''}.jpg`, '_blank');
     }
   };
 
-  const handleDownload = async (id: string, type: string) => {
+  const handleDownload = async (id: string, type: string, extension: 'pdf' | 'jpg') => {
     try {
       const baseUrl = getUrlForItem(id, type);
       if (!baseUrl) {
@@ -223,9 +236,9 @@ const Conquistas = () => {
       }
 
       // URL completa ainda precisa do uid para buscar o arquivo correto
-      const fileUrl = `${baseUrl}${firebaseUser?.uid || ''}.pdf`;
+      const fileUrl = `${baseUrl}${firebaseUser?.uid || ''}.${extension}`;
       // Nome do arquivo usa apenas o id para melhor experiência do usuário
-      const fileName = `${id}.pdf`;
+      const fileName = `${id}.${extension}`;
 
       console.log('Iniciando download:', fileUrl);
       
@@ -260,9 +273,46 @@ const Conquistas = () => {
     }
   };
 
+  const getNomeLinkedinForItem = (id: string, type: string): string => {
+    if (type === 'Badges') {
+      return urlBadges[id as keyof typeof urlBadges]?.nomeLinkedin || id;
+    }
+    if (type === 'Certificados') {
+      return urlCertificados[id as keyof typeof urlCertificados]?.nomeLinkedin || id;
+    }
+    return id;
+  };
+
   const handleShareLinkedIn = (id: string, type: string) => {
-    console.log(`Compartilhando no LinkedIn ${type} - ${id}`);
-    // TODO: Implementar compartilhamento
+    const conquista = conquistas?.find(c => c.id === type);
+    if (!conquista || !(id in conquista)) {
+      console.error('Conquista não encontrada');
+      return;
+    }
+
+    const timestamp = conquista[id] as Timestamp;
+    const date = new Date(timestamp._seconds * 1000);
+    const issueYear = date.getFullYear();
+    const issueMonth = date.getMonth() + 1; // getMonth() returns 0-11
+
+    const baseUrl = getUrlForItem(id, type);
+    if (!baseUrl) {
+      console.error('URL não encontrada');
+      return;
+    }
+
+    const certUrl = `${baseUrl}${firebaseUser?.uid || ''}.pdf`;
+    const name = getNomeLinkedinForItem(id, type);
+
+    const linkedinUrl = new URL('https://www.linkedin.com/profile/add');
+    linkedinUrl.searchParams.append('startTask', 'CERTIFICATION_NAME');
+    linkedinUrl.searchParams.append('name', name);
+    linkedinUrl.searchParams.append('organizationId', organizationId);
+    linkedinUrl.searchParams.append('issueYear', issueYear.toString());
+    linkedinUrl.searchParams.append('issueMonth', issueMonth.toString());
+    linkedinUrl.searchParams.append('certUrl', certUrl);
+
+    window.open(linkedinUrl.toString(), '_blank');
   };
 
   const renderBadgeWithMenu = (id: string, type: string) => (
@@ -290,15 +340,21 @@ const Conquistas = () => {
         </Menu.Item>
         <Menu.Item 
           leftSection={<IconDownload size={14} />}
-          onClick={() => handleDownload(id, type)}
+          onClick={() => handleDownload(id, type, 'pdf')}
         >
-          Baixar
+          Baixar PDF
+        </Menu.Item>
+        <Menu.Item 
+          leftSection={<IconDownload size={14} />}
+          onClick={() => handleDownload(id, type, 'jpg')}
+        >
+          Baixar Imagem
         </Menu.Item>
         <Menu.Item 
           leftSection={<IconBrandLinkedin size={14} />}
           onClick={() => handleShareLinkedIn(id, type)}
         >
-          LinkedIn
+          Adicionar ao LinkedIn
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
@@ -340,8 +396,11 @@ const Conquistas = () => {
     }
 
     return conquistas.map((conquista) => {
-      // Se não houver IDs ou array vazio, pula este tipo de conquista
-      if (!conquista.IDs || conquista.IDs.length === 0) {
+      // Extract achievement IDs from object keys, excluding the 'id' property
+      const achievementIds = Object.keys(conquista).filter(key => key !== 'id');
+
+      // If no achievements (other than id), skip this type
+      if (achievementIds.length === 0) {
         return null;
       }
 
@@ -354,7 +413,7 @@ const Conquistas = () => {
             </Text>
           </Group>
           <Group gap="sm" mt="md">
-            {conquista.IDs.map((id) => renderBadgeWithMenu(id, conquista.id))}
+            {achievementIds.map((id) => renderBadgeWithMenu(id, conquista.id))}
           </Group>
         </Card>
       );
@@ -388,3 +447,4 @@ const Conquistas = () => {
 };
 
 export default Conquistas;
+
