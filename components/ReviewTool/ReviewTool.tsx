@@ -12,7 +12,7 @@ export interface ReviewToolProps extends Partial<TabsProps> {
 export const calculateTokens = (text: string): { tokens: number; chars: number } => {
   try {
     // Use the correct API for GPT-4
-    const tokens = tokenizer.encode(text, { model: 'gpt-4' });
+    const tokens = tokenizer.encode(text);
     return {
       tokens: tokens.length,
       chars: text.length
