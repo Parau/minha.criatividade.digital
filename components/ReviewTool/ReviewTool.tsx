@@ -3,6 +3,8 @@ import { Tabs, TabsProps } from '@mantine/core';
 import { IconListTree, IconPencilStar, IconTextGrammar, IconTextSpellcheck, IconChecks } from '@tabler/icons-react';
 import * as tokenizer from 'gpt-tokenizer';  // Correct import for the full API
 import { RevisaoProva } from './RevisaoProva';
+import { RevisaoFinal } from './RevisaoFinal';
+import { RevisaoTexto } from './RevisaoTexto';
 
 export interface ReviewToolProps extends Partial<TabsProps> {
   defaultTab?: string;
@@ -40,7 +42,7 @@ export function ReviewTool({ defaultTab = 'estrutural', ...props }: ReviewToolPr
           3. Revisão de Texto
         </Tabs.Tab>
         <Tabs.Tab value="final" leftSection={<IconTextSpellcheck size="1.2rem" />}>
-          4. Revisão de Final
+          4. Revisão Final
         </Tabs.Tab>
         <Tabs.Tab value="prova" leftSection={<IconChecks size="1.2rem" />}>
           5. Revisão de Prova
@@ -56,11 +58,11 @@ export function ReviewTool({ defaultTab = 'estrutural', ...props }: ReviewToolPr
       </Tabs.Panel>
 
       <Tabs.Panel value="texto" pt="xs">
-        Conteúdo da aba de Revisão de Texto
+        <RevisaoTexto />
       </Tabs.Panel>
 
       <Tabs.Panel value="final" pt="xs">
-        Conteúdo da aba de Revisão de Final
+        <RevisaoFinal />
       </Tabs.Panel>
 
       <Tabs.Panel value="prova" pt="xs">
