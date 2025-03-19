@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Paper, Text, useMantineTheme, Stack, Button } from '@mantine/core';
+import { Card, Paper, Text, useMantineTheme, Stack, Button, useMantineColorScheme, MantineStyleProp } from '@mantine/core';
 import { DiffEditor } from '@monaco-editor/react';
 import { IconMaximize, IconMinimize } from '@tabler/icons-react';
 
@@ -21,6 +21,7 @@ export function DiffView({
   const [isClient, setIsClient] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme(); // Use the dedicated hook for color scheme
 
   // Garantir que o componente só seja renderizado no cliente
   useEffect(() => {
@@ -44,7 +45,7 @@ export function DiffView({
         width: '100vw',
         margin: 0,
         padding: '20px',
-        backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white
+        backgroundColor: colorScheme === 'dark' ? theme.colors.dark[8] : theme.white
       }
     : {
         position: 'relative', // Garantir posicionamento adequado quando não está em fullscreen
@@ -59,11 +60,11 @@ export function DiffView({
 
   return (
     <Paper
-      style={{
+      style ={{
         ...fullscreenStyle,
         display: 'flex',
         flexDirection: 'column',
-      }}
+      } as MantineStyleProp} //TIVE QUE FORÇAR O TIPO DE MANTINESTYLEPROP PORQUE ESTAVA FUNCIONANDO NO BROWSER MAS DANDO ERRO NO BUILD (o que gera erro no deploy do github pages)
     >
       <Stack style={{ height: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -80,7 +81,7 @@ export function DiffView({
         <Card style={{ 
           flex: 1, 
           padding: 0,
-          height: isFullscreen ? 'calc(100vh - 120px)' : `${height - 70}px`, // Ajustando para considerar o header
+          height: isFullscreen ? 'calc(100vh - 120px)' : `${Number(height) - 70}px`, // Ajustando para considerar o header
           overflow: 'hidden' // Garantir que não haja overflow do conteúdo
         }}>
           <DiffEditor
@@ -89,7 +90,7 @@ export function DiffView({
             language="plaintext"
             original={originalText}
             modified={modifiedText}
-            theme={theme.colorScheme === 'dark' ? 'vs-dark' : 'light'}
+            theme={colorScheme === 'dark' ? 'vs-dark' : 'light'}
             options={{
               renderSideBySide: true,
               readOnly: true,

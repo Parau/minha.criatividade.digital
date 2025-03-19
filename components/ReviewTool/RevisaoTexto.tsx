@@ -88,17 +88,34 @@ export function RevisaoTexto() {
   const [vozNarrativa, setVozNarrativa] = useState('');
 
   /**
-   * Remove caracteres especiais e emojis de uma string
+   * Remove caracteres especiais e emojis de uma string usando uma abordagem compatível com ES5
    * @param text String de entrada que pode conter emojis ou caracteres especiais
-   * @returns String limpa apenas com caracteres alfanuméricos e pontuação básica
+   * @returns String limpa sem emojis e caracteres especiais
    */
   const removeSpecialChars = (text: string): string => {
-    // Esta regex remove emojis e outros caracteres especiais, 
-    // mas mantém letras, números e pontuação básica
-    return text
-      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-      .replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu, '') // Remove caracteres que não são letras, números, pontuação ou espaços
-      .trim(); // Remove espaços em excesso no início e fim
+    if (!text) return '';
+    
+    // Primeiro, remover emojis comuns (implementação simplificada)
+    // Esta abordagem remove caracteres que estão fora do intervalo ASCII comum
+    let cleanText = '';
+    
+    // Percorrer cada caractere da string
+    for (let i = 0; i < text.length; i++) {
+      const charCode = text.charCodeAt(i);
+      
+      // Manter apenas caracteres ASCII comuns, números, letras acentuadas, pontuação básica
+      // Incluir caracteres latinos básicos (a-z, A-Z), números (0-9), pontuações comuns e espaços
+      if (
+        (charCode >= 32 && charCode <= 126) || // ASCII básico incluindo espaços, números, letras, pontuações
+        (charCode >= 192 && charCode <= 255) || // Letras latinas acentuadas
+        charCode === 161 || charCode === 191    // ¡ e ¿ (pontuações latinas especiais)
+      ) {
+        cleanText += text.charAt(i);
+      }
+    }
+    
+    // Remover espaços extras no início e final e retornar
+    return cleanText.trim();
   };
 
   const handleRevEstiloCopy = async () => {
