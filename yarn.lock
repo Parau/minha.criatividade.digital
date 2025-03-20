@@ -3823,6 +3823,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/js-yaml@npm:^4.0.9":
+  version: 4.0.9
+  resolution: "@types/js-yaml@npm:4.0.9"
+  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
+  languageName: node
+  linkType: hard
+
 "@types/jsdom@npm:^20.0.0":
   version: 20.0.1
   resolution: "@types/jsdom@npm:20.0.1"
@@ -7411,6 +7418,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"handlebars@npm:^4.7.8":
+  version: 4.7.8
+  resolution: "handlebars@npm:4.7.8"
+  dependencies:
+    minimist: "npm:^1.2.5"
+    neo-async: "npm:^2.6.2"
+    source-map: "npm:^0.6.1"
+    uglify-js: "npm:^3.1.4"
+    wordwrap: "npm:^1.0.0"
+  dependenciesMeta:
+    uglify-js:
+      optional: true
+  bin:
+    handlebars: bin/handlebars
+  checksum: 10c0/7aff423ea38a14bb379316f3857fe0df3c5d66119270944247f155ba1f08e07a92b340c58edaa00cfe985c21508870ee5183e0634dcb53dd405f35c93ef7f10d
+  languageName: node
+  linkType: hard
+
 "has-bigints@npm:^1.0.2":
   version: 1.1.0
   resolution: "has-bigints@npm:1.1.0"
@@ -9255,6 +9280,7 @@ __metadata:
     "@testing-library/user-event": "npm:^14.6.0"
     "@types/eslint-plugin-jsx-a11y": "npm:^6"
     "@types/jest": "npm:^29.5.14"
+    "@types/js-yaml": "npm:^4.0.9"
     "@types/node": "npm:^22.10.7"
     "@types/react": "npm:19.0.7"
     babel-loader: "npm:^9.2.1"
@@ -9264,8 +9290,10 @@ __metadata:
     eslint-plugin-react: "npm:^7.37.4"
     firebase: "npm:^9.8.3"
     gpt-tokenizer: "npm:^2.9.0"
+    handlebars: "npm:^4.7.8"
     jest: "npm:^29.7.0"
     jest-environment-jsdom: "npm:^29.7.0"
+    js-yaml: "npm:^4.1.0"
     next: "npm:15.1.5"
     postcss: "npm:^8.5.1"
     postcss-preset-mantine: "npm:1.17.0"
@@ -9461,7 +9489,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:^1.2.6":
+"minimist@npm:^1.2.5, minimist@npm:^1.2.6":
   version: 1.2.8
   resolution: "minimist@npm:1.2.8"
   checksum: 10c0/19d3fcdca050087b84c2029841a093691a91259a47def2f18222f41e7645a0b7c44ef4b40e88a1e58a40c84d2ef0ee6047c55594d298146d0eb3f6b737c20ce6
@@ -12581,6 +12609,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"uglify-js@npm:^3.1.4":
+  version: 3.19.3
+  resolution: "uglify-js@npm:3.19.3"
+  bin:
+    uglifyjs: bin/uglifyjs
+  checksum: 10c0/83b0a90eca35f778e07cad9622b80c448b6aad457c9ff8e568afed978212b42930a95f9e1be943a1ffa4258a3340fbb899f41461131c05bb1d0a9c303aed8479
+  languageName: node
+  linkType: hard
+
 "unbox-primitive@npm:^1.1.0":
   version: 1.1.0
   resolution: "unbox-primitive@npm:1.1.0"
@@ -13115,6 +13152,13 @@ __metadata:
   version: 1.2.5
   resolution: "word-wrap@npm:1.2.5"
   checksum: 10c0/e0e4a1ca27599c92a6ca4c32260e8a92e8a44f4ef6ef93f803f8ed823f486e0889fc0b93be4db59c8d51b3064951d25e43d434e95dc8c960cc3a63d65d00ba20
+  languageName: node
+  linkType: hard
+
+"wordwrap@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "wordwrap@npm:1.0.0"
+  checksum: 10c0/7ed2e44f3c33c5c3e3771134d2b0aee4314c9e49c749e37f464bf69f2bcdf0cbf9419ca638098e2717cff4875c47f56a007532f6111c3319f557a2ca91278e92
   languageName: node
   linkType: hard
 

@@ -1,6 +1,6 @@
 import { Box, Card, Container, Text } from '@mantine/core';
 import { HeaderMegaMenu } from '@/components/HeaderMegaMenu';
-import { ReviewTool } from '../../components/ReviewTool/ReviewTool';
+import { ReviewToolV2 } from '../../components/ReviewToolV2/ReviewToolV2';
 
 
 export default function RevisarPage() {
@@ -10,7 +10,7 @@ export default function RevisarPage() {
       <Box component="main" style={{ flex: 1 }}>
         <Container size="md" px="xs">
           <Card shadow="sm" p="lg">
-            <ReviewTool />
+            <ReviewToolV2 />
           </Card>
         </Container>
       </Box>
