@@ -1,0 +1,60 @@
+---
+id: revisao-estilo
+name: Padronização de Estilo e Voz Narrativa
+description: Padroniza o estilo de escrita e a voz narrativa do texto
+category: revisao-texto
+icon: IconPencilStar
+inputs:
+  - id: texto
+    type: HiddenInput
+    label: Texto para revisão
+    placeholder: Cole aqui o texto que você deseja revisar...
+  - id: estiloTexto
+    type: combobox
+    label: Estilo de escrita
+    description: Escolha ou defina o estilo de escrita a ser padronizado
+    placeholder: Escolha ou escreva o estilo
+    options:
+      - value: 📝 Descritivo
+        label: 📝 Descritivo
+      - value: 📜 Dissertativo/argumentativo
+        label: 📜 Dissertativo/argumentativo
+      - value: 📃 Expositivo
+        label: 📃 Expositivo
+      - value: 📐 Instrucional
+        label: 📐 Instrucional
+      - value: 📣 Narrativo
+        label: 📣 Narrativo
+      - value: 🥕 Persuasivo
+        label: 🥕 Persuasivo
+  - id: vozNarrativa
+    type: combobox
+    label: Voz narrativa
+    description: Escolha ou defina a voz narrativa a ser padronizada
+    placeholder: Escolha ou escreva a voz narrativa
+    options:
+      - value: ☝️ Narrador em primeira pessoa
+        label: ☝️ Narrador em primeira pessoa
+      - value: ✌️ Narrador em segunda pessoa
+        label: ✌️ Narrador em segunda pessoa
+      - value: 3️⃣ Narrador em terceira pessoa
+        label: 3️⃣ Narrador em terceira pessoa
+  - id: preservarOriginal
+    type: switch
+    label: Preservar ao máximo o texto original
+    description: Realiza apenas as intervenções estritamente necessárias para padronização
+    defaultValue: true
+---
+Assuma o papel de um revisor experiente e revise o <texto> a seguir, garantindo a padronização do estilo e das vozes narrativas. Concentre-se nos seguintes aspectos:
+{{#if estiloTexto}}
+- Padronizar o estilo de escrita para o tipo: {{estiloTexto}}.
+{{/if}}
+{{#if vozNarrativa}}
+- Padronizar a voz narrativa para o tipo: {{vozNarrativa}}.
+{{/if}}
+{{#if preservarOriginal}}
+Mantenha o texto o mais próximo possível do original, realizando apenas as intervenções estritamente necessárias para a padronização do estilo e da voz narrativa, sem modificar tom ou conteúdo.
+{{/if}}
+<texto>
+{{texto}}
+</texto>

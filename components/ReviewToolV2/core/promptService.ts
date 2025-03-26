@@ -1,7 +1,7 @@
 import * as tokenizer from 'gpt-tokenizer';
 import { PromptTemplate, PromptEvaluation } from './promptTypes';
 import Handlebars from 'handlebars';
-import { loadTemplatesFromFiles, staticTemplateFiles } from './promptTemplateLoader';
+import { loadTemplatesFromFiles, fallbackTemplateFiles, getAvailableTemplates } from './promptTemplateLoader';
 
 // Limite de tokens para o ChatGPT
 export const CHATGPT_TOKEN_LIMIT = 8192;
@@ -10,19 +10,30 @@ export const CHATGPT_TOKEN_LIMIT = 8192;
 export class PromptTemplateRegistry {
   private templates: Map<string, PromptTemplate> = new Map();
   private isInitialized: boolean = false;
+  private isInitializing: boolean = false;
 
-  // Inicializar o registro com templates padrão
-  initialize(): void {
-    if (this.isInitialized) return;
+  // Inicializar o registro com templates
+  async initialize(): Promise<void> {
+    if (this.isInitialized || this.isInitializing) return;
     
     try {
-      // Carregar templates estáticos
-      const templates = loadTemplatesFromFiles(staticTemplateFiles);
+      this.isInitializing = true;
+      
+      // Carregar templates dinamicamente
+      const templates = await getAvailableTemplates();
       templates.forEach(template => this.register(template));
       
       this.isInitialized = true;
     } catch (error) {
       console.error('Erro ao inicializar templates:', error);
+      
+      // Em caso de erro, usar os templates de fallback
+      const fallbackTemplates = loadTemplatesFromFiles(fallbackTemplateFiles);
+      fallbackTemplates.forEach(template => this.register(template));
+      
+      this.isInitialized = true;
+    } finally {
+      this.isInitializing = false;
     }
   }
 
@@ -37,21 +48,26 @@ export class PromptTemplateRegistry {
   }
 
   // Obter um template pelo ID
-  get(id: string): PromptTemplate | undefined {
-    if (!this.isInitialized) this.initialize();
+  async get(id: string): Promise<PromptTemplate | undefined> {
+    if (!this.isInitialized) await this.initialize();
     return this.templates.get(id);
   }
 
   // Listar todos os templates
-  getAll(): PromptTemplate[] {
-    if (!this.isInitialized) this.initialize();
+  async getAll(): Promise<PromptTemplate[]> {
+    if (!this.isInitialized) await this.initialize();
     return Array.from(this.templates.values());
   }
 
   // Listar templates por categoria
-  getByCategory(category: string): PromptTemplate[] {
-    if (!this.isInitialized) this.initialize();
-    return this.getAll().filter(template => template.category === category);
+  async getByCategory(category: string): Promise<PromptTemplate[]> {
+    if (!this.isInitialized) await this.initialize();
+    const allTemplates = await this.getAll();
+    const filtered = allTemplates.filter(template => {
+      //console.log(`Template ${template.id}: comparing category '${template.category}' with '${category}'`, template.category === category);
+      return template.category === category;
+    });
+    return filtered;
   }
 }
 

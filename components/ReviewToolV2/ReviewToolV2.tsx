@@ -4,6 +4,9 @@ import { IconListTree, IconPencilStar, IconTextGrammar, IconTextSpellcheck, Icon
 import { PromptBuilder } from './core/PromptBuilder';
 import { templateRegistry } from './core/promptService';
 
+import { RevisaoTextoV2 } from './RevisaoTextoV2';
+import { RevisaoProvaV2 } from './RevisaoProvaV2';
+
 export interface ReviewToolV2Props extends Partial<TabsProps> {
   defaultTab?: string;
 }
@@ -11,17 +14,35 @@ export interface ReviewToolV2Props extends Partial<TabsProps> {
 export function ReviewToolV2({ defaultTab = 'texto', ...props }: ReviewToolV2Props) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [loading, setLoading] = useState(true);
+  const [textTemplates, setTextTemplates] = useState([]);
+  const [finalTemplates, setFinalTemplates] = useState([]);
+  const [proofTemplates, setProofTemplates] = useState([]);
   
   // Inicializar templates ao montar o componente
   useEffect(() => {
-    templateRegistry.initialize();
-    setLoading(false);
+    const initializeTemplates = async () => {
+      try {
+        await templateRegistry.initialize();
+        
+        // Fetch templates after initialization is complete
+        const [textTemplates, finalTemplates, proofTemplates] = await Promise.all([
+          templateRegistry.getByCategory('revisao-texto'),
+          templateRegistry.getByCategory('revisao-final'),
+          templateRegistry.getByCategory('revisao-prova')
+        ]);
+        setTextTemplates(textTemplates);
+        setFinalTemplates(finalTemplates);
+        setProofTemplates(proofTemplates);
+        
+      } catch (error) {
+        console.error('Failed to initialize templates:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeTemplates();
   }, []);
-  
-  // Obter templates por categoria
-  const textTemplates = templateRegistry.getByCategory('revisao-texto');
-  const finalTemplates = templateRegistry.getByCategory('revisao-final');
-  const proofTemplates = templateRegistry.getByCategory('revisao-prova');
   
   if (loading) {
     return (
@@ -66,16 +87,8 @@ export function ReviewToolV2({ defaultTab = 'texto', ...props }: ReviewToolV2Pro
       </Tabs.Panel>
 
       <Tabs.Panel value="texto" pt="xs">
-        <Stack spacing="lg">
-          <Title order={2}>Revisão de Texto</Title>
-          {textTemplates.length > 0 ? (
-            textTemplates.map(template => (
-              <PromptBuilder key={template.id} template={template} />
-            ))
-          ) : (
-            <Text color="dimmed">Nenhum template disponível para esta categoria.</Text>
-          )}
-        </Stack>
+        <RevisaoTextoV2 templates={textTemplates} />
+
       </Tabs.Panel>
 
       <Tabs.Panel value="final" pt="xs">
@@ -92,16 +105,7 @@ export function ReviewToolV2({ defaultTab = 'texto', ...props }: ReviewToolV2Pro
       </Tabs.Panel>
 
       <Tabs.Panel value="prova" pt="xs">
-        <Stack spacing="lg">
-          <Title order={2}>Revisão de Prova</Title>
-          {proofTemplates.length > 0 ? (
-            proofTemplates.map(template => (
-              <PromptBuilder key={template.id} template={template} />
-            ))
-          ) : (
-            <Text color="dimmed">Nenhum template disponível para esta categoria.</Text>
-          )}
-        </Stack>
+        <RevisaoProvaV2 templates={proofTemplates} />
       </Tabs.Panel>
     </Tabs>
   );

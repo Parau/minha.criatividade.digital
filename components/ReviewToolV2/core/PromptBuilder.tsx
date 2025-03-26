@@ -12,9 +12,10 @@ import { evaluatePrompt, copyPromptToClipboard, CHATGPT_TOKEN_LIMIT, renderPromp
 interface PromptBuilderProps {
   template: PromptTemplate;
   onPromptGenerated?: (prompt: string) => void;
+  textToReview: string;
 }
 
-export function PromptBuilder({ template, onPromptGenerated }: PromptBuilderProps) {
+export function PromptBuilder({ template, onPromptGenerated, textToReview }: PromptBuilderProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [evaluation, setEvaluation] = useState<ReturnType<typeof evaluatePrompt> | null>(null);
@@ -41,6 +42,17 @@ export function PromptBuilder({ template, onPromptGenerated }: PromptBuilderProp
     
     // Renderizar o campo apropriado baseado no tipo
     switch (field.type) {
+      case 'HiddenInput': // para copiar o texto de entrada que fica fora do promptbuilder
+      return (
+        <TextInput
+          hidden = {true}
+          style={{ display: 'none' }} // Add this as a backup
+          key={field.id}
+          label={field.label}
+          required={false} //força a não ser obrigatório porque não vai ser preenchido pelo usuario
+        />
+      );
+      
       case 'text':
         return (
           <TextInput
@@ -52,7 +64,7 @@ export function PromptBuilder({ template, onPromptGenerated }: PromptBuilderProp
             icon={field.icon}
             {...form.getInputProps(field.id)}
           />
-        );
+        ); 
         
       case 'textarea':
         return (
@@ -199,11 +211,15 @@ export function PromptBuilder({ template, onPromptGenerated }: PromptBuilderProp
   
   // Gerar o prompt baseado nos valores do formulário
   const handleGeneratePrompt = () => {
-    const { hasErrors } = form.validate();
-    
+    const { hasErrors, errors } = form.validate();
+
     if (!hasErrors) {
+      //Copia o texto de entrada que fica fora do promptbuilder
+      form.values["texto"] = textToReview;
+
       const formValues = form.values;
       const prompt = renderPromptTemplate(template.template, formValues);
+
       setGeneratedPrompt(prompt);
       setEvaluation(evaluatePrompt(prompt));
       

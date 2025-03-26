@@ -1,6 +1,6 @@
 import { PromptTemplate, PromptInputField } from './promptTypes';
 import { ReactNode } from 'react';
-import { IconTextSpellcheck, IconPencilStar, IconListTree, IconTextGrammar, IconChecks } from '@tabler/icons-react';
+import { IconTextSpellcheck, IconPencilStar, IconListTree, IconTextGrammar, IconChecks, IconAlertCircle } from '@tabler/icons-react';
 import yaml from 'js-yaml';
 
 // Mapeamento de ícones por nome
@@ -10,6 +10,7 @@ const iconMap: Record<string, ReactNode> = {
   'IconListTree': <IconListTree size={18} />,
   'IconTextGrammar': <IconTextGrammar size={18} />,
   'IconChecks': <IconChecks size={18} />,
+  'IconAlertCircle': <IconAlertCircle size={18} />,
 };
 
 /**
@@ -29,14 +30,25 @@ export interface TemplateMetadata {
  */
 export function parseTemplateFile(fileContent: string): PromptTemplate {
   try {
+    // Log the first few characters to help with debugging
+    console.log('Template content starts with:', fileContent.substring(0, 40));
+    
     // Identificar e separar o frontmatter e o conteúdo do template
-    const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    // More robust pattern that handles both Unix (LF) and Windows (CRLF) line endings
+    // and is more forgiving with whitespace
+    const frontmatterMatch = fileContent.match(/^---[\r\n]+([\s\S]*?)[\r\n]+---[\r\n]+([\s\S]*)$/);
     
     if (!frontmatterMatch) {
+      console.error('Frontmatter não encontrado no conteúdo:', fileContent.substring(0, 100) + '...');
       throw new Error('Formato de arquivo de template inválido. Frontmatter não encontrado.');
     }
     
     const [, frontmatterYaml, templateContent] = frontmatterMatch;
+    
+    // Check if we successfully extracted the frontmatter
+    if (!frontmatterYaml || frontmatterYaml.trim() === '') {
+      throw new Error('Frontmatter está vazio no arquivo de template.');
+    }
     
     // Analisar o frontmatter YAML usando js-yaml
     const metadata = yaml.load(frontmatterYaml) as TemplateMetadata;
@@ -76,6 +88,7 @@ export function parseTemplateFile(fileContent: string): PromptTemplate {
     };
   } catch (error) {
     console.error('Erro ao analisar arquivo de template:', error);
+    console.error('Conteúdo problemático:', fileContent.substring(0, 200) + '...');
     throw new Error(`Falha ao carregar o template: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
   }
 }
@@ -87,103 +100,75 @@ export function loadTemplatesFromFiles(fileContents: Record<string, string>): Pr
   return Object.values(fileContents).map(parseTemplateFile);
 }
 
-// Templates estáticos incluídos no pacote
-export const staticTemplateFiles: Record<string, string> = {
-  'revisaoOrtografica': `---
-id: revisao-ortografica
-name: Revisão Ortográfica
-description: Corrige erros gramaticais, ortográficos e de pontuação no texto
-category: revisao-texto
-icon: IconTextSpellcheck
-inputs:
-  - id: texto
-    type: textarea
-    label: Texto para revisão
-    placeholder: Cole aqui o texto que você deseja revisar...
-    required: true
-    validation:
-      minLength: 10
-      errorMessage: Por favor, insira um texto para revisão
-  - id: preservarOriginal
-    type: switch
-    label: Preservar ao máximo o texto original
-    description: Realiza apenas as intervenções estritamente necessárias para correção
-    defaultValue: true
----
-Assuma o papel de um revisor experiente e revise o <texto> a seguir, garantindo correção ortográfica e gramatical. Concentre-se nos seguintes aspectos:
-- Ortografia correta;
-- Gramática precisa;
-- Pontuação adequada;
-- Construção sintática correta.
-{{#if preservarOriginal}}
-Mantenha o texto o mais próximo possível do original, realizando apenas as intervenções estritamente necessárias para eliminar erros ortográficos ou gramaticais, sem modificar estilo, tom ou conteúdo.
-{{/if}}
-<texto>
-{{texto}}
-</texto>`,
+/**
+ * Carrega templates via HTTPS a partir da pasta pública do Next.js
+ */
+export async function loadTemplatesFromPublicDir(): Promise<Record<string, string>> {
+  try {
+    // Lista de nomes de arquivos de template
+    const templateFileNames = [
+      'revisaoOrtografica.md',
+      'revisaoEstilo.md',
+      'revisaoTipografica.md',
+      'acidentesPercurso.md'
+    ];
+    
+    const templateFiles: Record<string, string> = {};
+    
+    // Fetch each template file in parallel
+    const fetchPromises = templateFileNames.map(async (fileName) => {
+      try {
+        const response = await fetch(`/Templates/${fileName}`);
+        
+        if (!response.ok) {
+          console.warn(`Não foi possível carregar o template ${fileName}: ${response.status} ${response.statusText}`);
+          return;
+        }
+        
+        const content = await response.text();
+        
+        // Check if content has the correct format
+        if (!content.startsWith('---')) {
+          console.warn(`Template ${fileName} não tem o formato correto. Conteúdo inicia com: ${content.substring(0, 20)}`);
+          return;
+        }
+        
+        const templateId = fileName.replace(/\.(md|txt)$/, '');
+        templateFiles[templateId] = content;
+      } catch (error) {
+        console.warn(`Erro ao carregar o template ${fileName}:`, error);
+      }
+    });
+    
+    // Wait for all fetches to complete
+    await Promise.all(fetchPromises);
+    
+    return templateFiles;
+  } catch (error) {
+    console.error('Erro ao carregar templates:', error);
+    return {};
+  }
+}
 
-  'revisaoEstilo': `---
-id: revisao-estilo
-name: Padronização de Estilo e Voz Narrativa
-description: Padroniza o estilo de escrita e a voz narrativa do texto
-category: revisao-texto
-icon: IconPencilStar
-inputs:
-  - id: texto
-    type: textarea
-    label: Texto para revisão
-    placeholder: Cole aqui o texto que você deseja revisar...
-    required: true
-    validation:
-      minLength: 10
-      errorMessage: Por favor, insira um texto para revisão
-  - id: estiloTexto
-    type: combobox
-    label: Estilo de escrita
-    description: Escolha ou defina o estilo de escrita a ser padronizado
-    placeholder: Escolha ou escreva o estilo
-    options:
-      - value: 📝 Descritivo
-        label: 📝 Descritivo
-      - value: 📜 Dissertativo/argumentativo
-        label: 📜 Dissertativo/argumentativo
-      - value: 📃 Expositivo
-        label: 📃 Expositivo
-      - value: 📐 Instrucional
-        label: 📐 Instrucional
-      - value: 📣 Narrativo
-        label: 📣 Narrativo
-      - value: 🥕 Persuasivo
-        label: 🥕 Persuasivo
-  - id: vozNarrativa
-    type: combobox
-    label: Voz narrativa
-    description: Escolha ou defina a voz narrativa a ser padronizada
-    placeholder: Escolha ou escreva a voz narrativa
-    options:
-      - value: ☝️ Narrador em primeira pessoa
-        label: ☝️ Narrador em primeira pessoa
-      - value: ✌️ Narrador em segunda pessoa
-        label: ✌️ Narrador em segunda pessoa
-      - value: 3️⃣ Narrador em terceira pessoa
-        label: 3️⃣ Narrador em terceira pessoa
-  - id: preservarOriginal
-    type: switch
-    label: Preservar ao máximo o texto original
-    description: Realiza apenas as intervenções estritamente necessárias para padronização
-    defaultValue: true
----
-Assuma o papel de um revisor experiente e revise o <texto> a seguir, garantindo a padronização do estilo e das vozes narrativas. Concentre-se nos seguintes aspectos:
-{{#if estiloTexto}}
-- Padronizar o estilo de escrita para o tipo: {{estiloTexto}}.
-{{/if}}
-{{#if vozNarrativa}}
-- Padronizar a voz narrativa para o tipo: {{vozNarrativa}}.
-{{/if}}
-{{#if preservarOriginal}}
-Mantenha o texto o mais próximo possível do original, realizando apenas as intervenções estritamente necessárias para a padronização do estilo e da voz narrativa, sem modificar tom ou conteúdo.
-{{/if}}
-<texto>
-{{texto}}
-</texto>`
-};
+/**
+ * Obtém todos os templates disponíveis
+ * Tenta carregar via HTTP
+ */
+export async function getAvailableTemplates(): Promise<PromptTemplate[]> {
+  try {
+    // Tentar carregar os templates via HTTP
+    const templateFiles = await loadTemplatesFromPublicDir();
+    
+    // Se encontrou templates, use-os
+    if (Object.keys(templateFiles).length > 0) {
+      return loadTemplatesFromFiles(templateFiles);
+    }
+    
+    // Se não encontrou, retornar array vazio
+    console.info('Não foram encontrados templates no diretório público');
+    return [];
+  } catch (error) {
+    console.error('Erro ao obter templates disponíveis:', error);
+    return [];
+  }
+}
