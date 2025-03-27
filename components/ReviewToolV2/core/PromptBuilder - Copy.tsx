@@ -49,6 +49,7 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
           style={{ display: 'none' }} // Add this as a backup
           key={field.id}
           label={field.label}
+          required={false} //força a não ser obrigatório porque não vai ser preenchido pelo usuario
         />
       );
       
@@ -129,44 +130,22 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
       onDropdownClose: () => combobox.resetSelectedOption(),
     });
     
-    // Extrair valores e labels das opções
-    const initialOptions = field.options?.map(opt => ({ 
-      value: opt.value, 
-      label: opt.label || opt.value 
-    })) || [];
-    
+    // Extrair valores iniciais das opções
+    const initialOptions = field.options?.map(opt => opt.value) || [];
     const [data, setData] = useState(initialOptions);
     const [value, setValue] = useState<string | null>(form.values[field.id] || null);
-    const [displayValue, setDisplayValue] = useState('');
-    const [search, setSearch] = useState('');
-    
-    // Efeito para atualizar o display quando um valor é selecionado inicialmente
-    useEffect(() => {
-      if (value) {
-        const selectedOption = data.find(item => item.value === value);
-        if (selectedOption) {
-          setDisplayValue(selectedOption.label);
-          setSearch(selectedOption.label);
-        }
-      }
-    }, [value, data]);
+    const [search, setSearch] = useState(form.values[field.id] || '');
     
     // Filtrar opções baseado na pesquisa
-    const filteredOptions = data.filter((item) => 
-      item.label.toLowerCase().includes(search.toLowerCase().trim()) || 
-      item.value.toLowerCase().includes(search.toLowerCase().trim())
-    );
-    
-    // Verificar se existe correspondência exata com o texto de pesquisa
-    const exactMatch = data.some(item => 
-      item.label.toLowerCase() === search.toLowerCase() || 
-      item.value.toLowerCase() === search.toLowerCase()
-    );
+    const exactOptionMatch = data.some((item) => item === search);
+    const filteredOptions = exactOptionMatch
+      ? data
+      : data.filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()));
     
     // Mapear opções para componentes de opção
     const options = filteredOptions.map((item) => (
-      <Combobox.Option value={item.value} key={item.value}>
-        {item.label}
+      <Combobox.Option value={item} key={item}>
+        {item}
       </Combobox.Option>
     ));
     
@@ -180,21 +159,13 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
           withinPortal={false}
           onOptionSubmit={(val) => {
             if (val === '$create') {
-              // Ao criar nova opção, usar o mesmo valor para label e value
-              const newOption = { value: search, label: search };
-              setData((current) => [...current, newOption]);
+              setData((current) => [...current, search]);
               setValue(search);
-              setDisplayValue(search);
               form.setFieldValue(field.id, search);
             } else {
-              // Ao selecionar opção existente, usar o value para o form e o label para display
-              const selectedOption = data.find(item => item.value === val);
-              if (selectedOption) {
-                setValue(val);
-                setDisplayValue(selectedOption.label);
-                setSearch(selectedOption.label);
-                form.setFieldValue(field.id, val);
-              }
+              setValue(val);
+              setSearch(val);
+              form.setFieldValue(field.id, val);
             }
             combobox.closeDropdown();
           }}
@@ -212,7 +183,7 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
               onFocus={() => combobox.openDropdown()}
               onBlur={() => {
                 combobox.closeDropdown();
-                setSearch(displayValue || '');
+                setSearch(value || '');
               }}
               placeholder={field.placeholder}
               rightSectionPointerEvents="none"
@@ -222,7 +193,7 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
           <Combobox.Dropdown>
             <Combobox.Options>
               {options}
-              {!exactMatch && search.trim().length > 0 && (
+              {!exactOptionMatch && search.trim().length > 0 && (
                 <Combobox.Option value="$create">+ Criar [{search}]</Combobox.Option>
               )}
             </Combobox.Options>
@@ -240,9 +211,9 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
   
   // Gerar o prompt baseado nos valores do formulário
   const handleGeneratePrompt = () => {
-    //const { hasErrors, errors } = form.validate();
+    const { hasErrors, errors } = form.validate();
 
-    //if (!hasErrors) {
+    if (!hasErrors) {
       //Copia o texto de entrada que fica fora do promptbuilder
       form.values["texto"] = textToReview;
 
@@ -250,12 +221,12 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
       const prompt = renderPromptTemplate(template.template, formValues);
 
       setGeneratedPrompt(prompt);
-      setEvaluation(evaluatePrompt(prompt, formValues, template));
+      setEvaluation(evaluatePrompt(prompt));
       
       if (onPromptGenerated) {
         onPromptGenerated(prompt);
       }
-    //}
+    }
   };
   
   // Copiar o prompt para a área de transferência
@@ -292,10 +263,9 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
           </Button>
 
       </form>
+
       
       {generatedPrompt && evaluation && (
-        <>
-        <br />
         <Card p="md" radius="md" withBorder>
           <Group position="apart" mb="md">
             <Text fw={500}>Prompt Gerado</Text>
@@ -308,21 +278,34 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
               {isCopied ? "Copiado!" : "Copiar para área de transferência"}
             </Button>
           </Group>
-         
-          {evaluation.errors.length > 0 && (
-            <Stack gap={2}>
-              {evaluation.errors.map((error, i) => (
-                <Text key={i} size="sm">{error}</Text>
-              ))}
-              <Text size="sm">✔️ O prompt foi copiado para a área de transferência.</Text>
-            </Stack>
-          )}
-          <Stack mt={10}>
+          
+          <Group mb="md">
             <Badge color={evaluation.isWithinLimits ? "green" : "red"}>
               {evaluation.tokens} tokens
             </Badge>
-          </Stack>
-          <br />
+            <Badge color="blue">{evaluation.chars} caracteres</Badge>
+          </Group>
+          
+          {evaluation.warnings.length > 0 && (
+            <Alert icon={<IconAlertCircle size={16} />} color="yellow" mb="md">
+              <Stack>
+                {evaluation.warnings.map((warning, i) => (
+                  <Text key={i} size="sm">{warning}</Text>
+                ))}
+              </Stack>
+            </Alert>
+          )}
+          
+          {evaluation.errors.length > 0 && (
+            <Alert icon={<IconAlertCircle size={16} />} color="red" mb="md">
+              <Stack>
+                {evaluation.errors.map((error, i) => (
+                  <Text key={i} size="sm">{error}</Text>
+                ))}
+              </Stack>
+            </Alert>
+          )}
+          
           <Textarea
             value={generatedPrompt}
             minRows={8}
@@ -345,7 +328,6 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
             )}
           </Transition>
         </Card>
-        </>
       )}
     </>
   );

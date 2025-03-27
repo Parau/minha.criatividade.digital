@@ -23,6 +23,14 @@ export interface SelectOption {
 /**
  * Definição de um campo de entrada para o template de prompt
  */
+export interface PromptInputValidation {
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  errorMessage?: string;
+  // Add other validation rules as needed
+}
+
 export interface PromptInputField {
   id: string;                 // Identificador único do campo
   type: InputFieldType;       // Tipo de campo
@@ -33,12 +41,7 @@ export interface PromptInputField {
   required?: boolean;         // Se o campo é obrigatório
   options?: SelectOption[];   // Opções para select/multiselect/combobox
   icon?: ReactNode;           // Ícone associado ao campo
-  validation?: {              // Regras de validação
-    minLength?: number;
-    maxLength?: number;
-    pattern?: RegExp;
-    errorMessage?: string;
-  };
+  validation?: PromptInputValidation; // Regras de validação
   dependsOn?: {               // Dependência condicional
     field: string;            // ID do campo do qual este campo depende
     value: any;               // Valor que ativa este campo
@@ -70,3 +73,4 @@ export interface PromptEvaluation {
   errors: string[];         // Erros encontrados
   isWithinLimits: boolean;  // Se está dentro dos limites de tokens
 }
+

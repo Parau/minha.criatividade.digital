@@ -90,17 +90,65 @@ export function renderPromptTemplate(template: string, values: Record<string, an
 /**
  * Calcula tokens e avalia qualidade do prompt
  */
-export function evaluatePrompt(promptText: string): PromptEvaluation {
+export function evaluatePrompt(
+  promptText: string, 
+  values: Record<string, any>, 
+  template?: PromptTemplate
+): PromptEvaluation {
   const tokens = tokenizer.encode(promptText).length;
   const chars = promptText.length;
   
   const warnings: string[] = [];
   const errors: string[] = [];
   
-  // Verificar se o texto está vazio ou muito curto
-  if (!promptText.trim()) {
-    errors.push('O prompt está vazio.');
-  } else if (chars < 10) {
+  // Validação baseada nas regras do template
+  if (template && template.inputs) {
+    template.inputs.forEach(input => {
+      const value = values[input.id];
+      
+      // Verifica se o campo é obrigatório
+      if (input.required && (!value || (typeof value === 'string' && !value.trim()))) {
+        errors.push(input.validation?.errorMessage || `O campo "${input.label || input.id}" é obrigatório`);
+      }
+
+      // Verifica regras de validação específicas
+      if (input.validation && value) {
+        // Validação de tamanho mínimo
+        if (input.validation.minLength && typeof value === 'string' && 
+            value.trim().length < input.validation.minLength) {
+          const errorMsg = input.validation.errorMessage || 
+            `O campo "${input.label}" deve ter pelo menos ${input.validation.minLength} caracteres`;
+          errors.push(errorMsg);
+        }
+        
+        // Validação de tamanho máximo
+        if (input.validation.maxLength && typeof value === 'string' && 
+            value.trim().length > input.validation.maxLength) {
+          const errorMsg = input.validation.errorMessage || 
+            `O campo "${input.label}" deve ter no máximo ${input.validation.maxLength} caracteres`;
+          errors.push(errorMsg);
+        }
+        
+        // Validação de regex
+        if (input.validation.pattern && typeof value === 'string') {
+          const regex = new RegExp(input.validation.pattern);
+          if (!regex.test(value)) {
+            const errorMsg = input.validation.errorMessage || 
+              `O campo "${input.label}" não está no formato correto`;
+            errors.push(errorMsg);
+          }
+        }
+      }
+    });
+  } else {
+    // Verificação legada se o template não estiver disponível
+    if (!values.texto || !values.texto.trim()) {
+      errors.push('O texto para revisão está vazio');
+    }
+  }
+  
+  // Verificações gerais
+  if (promptText.length < 50) {
     warnings.push('O prompt é muito curto e pode não ser eficaz.');
   }
   

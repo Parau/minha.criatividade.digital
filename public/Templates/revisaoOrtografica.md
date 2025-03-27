@@ -1,9 +1,13 @@
 ---
 id: revisao-ortografica
-name: Revisão Ortográfica
-description: Corrige erros gramaticais, ortográficos e de pontuação no texto
+name: Correção de erros gramaticais e ortográficos
+description: |
+  Esta revisão considera os seguintes aspectos:
+  <li> Correção de erros gramaticais e ortográficos;</li>
+  <li> Padrões de pontuação e espaçamento, garantindo uniformidade.</li>
 category: revisao-texto
 icon: IconTextSpellcheck
+bkColor: '#f0f8ff'
 inputs:
   - id: texto
     type: HiddenInput
@@ -12,7 +16,7 @@ inputs:
   - id: preservarOriginal
     type: switch
     label: Preservar ao máximo o texto original
-    description: Realiza apenas as intervenções estritamente necessárias para correção
+    description: ""
     defaultValue: true
 ---
 Assuma o papel de um revisor experiente e revise o <texto> a seguir, garantindo correção ortográfica e gramatical. Concentre-se nos seguintes aspectos:

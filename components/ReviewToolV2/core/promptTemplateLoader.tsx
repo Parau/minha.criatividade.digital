@@ -22,6 +22,7 @@ export interface TemplateMetadata {
   description: string;
   category: string;
   icon?: string;
+  bkColor: string;
   inputs: PromptInputField[];
 }
 
