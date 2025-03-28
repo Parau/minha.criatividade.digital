@@ -13,6 +13,9 @@ inputs:
     type: HiddenInput
     label: Texto para revisão
     placeholder: Cole aqui o texto que você deseja revisar...
+    required: true
+    validation:
+      errorMessage: ⛔ Por favor, insira um texto para revisão!
   - id: preservarOriginal
     type: switch
     label: Preservar ao máximo o texto original

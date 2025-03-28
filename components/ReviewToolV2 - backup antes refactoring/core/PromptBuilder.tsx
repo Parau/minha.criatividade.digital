@@ -28,6 +28,10 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
   const form = useForm({
     initialValues,
     validate: template.validateInputs,
+    onValuesChange: (values) => {
+      // Apaga o prompt gerado pois com alteração de formulário será necessário gerar o prompt novamente
+      setGeneratedPrompt("");
+    }
   });
   
   // Renderizar campo de entrada baseado no tipo
@@ -49,7 +53,6 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
           style={{ display: 'none' }} // Add this as a backup
           key={field.id}
           label={field.label}
-          required={false} //força a não ser obrigatório porque não vai ser preenchido pelo usuario
         />
       );
       
@@ -130,22 +133,44 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
       onDropdownClose: () => combobox.resetSelectedOption(),
     });
     
-    // Extrair valores iniciais das opções
-    const initialOptions = field.options?.map(opt => opt.value) || [];
+    // Extrair valores e labels das opções
+    const initialOptions = field.options?.map(opt => ({ 
+      value: opt.value, 
+      label: opt.label || opt.value 
+    })) || [];
+    
     const [data, setData] = useState(initialOptions);
     const [value, setValue] = useState<string | null>(form.values[field.id] || null);
-    const [search, setSearch] = useState(form.values[field.id] || '');
+    const [displayValue, setDisplayValue] = useState('');
+    const [search, setSearch] = useState('');
+    
+    // Efeito para atualizar o display quando um valor é selecionado inicialmente
+    useEffect(() => {
+      if (value) {
+        const selectedOption = data.find(item => item.value === value);
+        if (selectedOption) {
+          setDisplayValue(selectedOption.label);
+          setSearch(selectedOption.label);
+        }
+      }
+    }, [value, data]);
     
     // Filtrar opções baseado na pesquisa
-    const exactOptionMatch = data.some((item) => item === search);
-    const filteredOptions = exactOptionMatch
-      ? data
-      : data.filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()));
+    const filteredOptions = data.filter((item) => 
+      item.label.toLowerCase().includes(search.toLowerCase().trim()) || 
+      item.value.toLowerCase().includes(search.toLowerCase().trim())
+    );
+    
+    // Verificar se existe correspondência exata com o texto de pesquisa
+    const exactMatch = data.some(item => 
+      item.label.toLowerCase() === search.toLowerCase() || 
+      item.value.toLowerCase() === search.toLowerCase()
+    );
     
     // Mapear opções para componentes de opção
     const options = filteredOptions.map((item) => (
-      <Combobox.Option value={item} key={item}>
-        {item}
+      <Combobox.Option value={item.value} key={item.value}>
+        {item.label}
       </Combobox.Option>
     ));
     
@@ -159,13 +184,21 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
           withinPortal={false}
           onOptionSubmit={(val) => {
             if (val === '$create') {
-              setData((current) => [...current, search]);
+              // Ao criar nova opção, usar o mesmo valor para label e value
+              const newOption = { value: search, label: search };
+              setData((current) => [...current, newOption]);
               setValue(search);
+              setDisplayValue(search);
               form.setFieldValue(field.id, search);
             } else {
-              setValue(val);
-              setSearch(val);
-              form.setFieldValue(field.id, val);
+              // Ao selecionar opção existente, usar o value para o form e o label para display
+              const selectedOption = data.find(item => item.value === val);
+              if (selectedOption) {
+                setValue(val);
+                setDisplayValue(selectedOption.label);
+                setSearch(selectedOption.label);
+                form.setFieldValue(field.id, val);
+              }
             }
             combobox.closeDropdown();
           }}
@@ -183,7 +216,7 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
               onFocus={() => combobox.openDropdown()}
               onBlur={() => {
                 combobox.closeDropdown();
-                setSearch(value || '');
+                setSearch(displayValue || '');
               }}
               placeholder={field.placeholder}
               rightSectionPointerEvents="none"
@@ -193,7 +226,7 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
           <Combobox.Dropdown>
             <Combobox.Options>
               {options}
-              {!exactOptionMatch && search.trim().length > 0 && (
+              {!exactMatch && search.trim().length > 0 && (
                 <Combobox.Option value="$create">+ Criar [{search}]</Combobox.Option>
               )}
             </Combobox.Options>
@@ -211,9 +244,9 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
   
   // Gerar o prompt baseado nos valores do formulário
   const handleGeneratePrompt = () => {
-    const { hasErrors, errors } = form.validate();
+    //const { hasErrors, errors } = form.validate();
 
-    if (!hasErrors) {
+    //if (!hasErrors) {
       //Copia o texto de entrada que fica fora do promptbuilder
       form.values["texto"] = textToReview;
 
@@ -221,22 +254,23 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
       const prompt = renderPromptTemplate(template.template, formValues);
 
       setGeneratedPrompt(prompt);
-      setEvaluation(evaluatePrompt(prompt));
+      setEvaluation(evaluatePrompt(prompt, formValues, template));
+
+      //Antes a cópia estava separada em outro botão, mas agora está dentro do botão de gerar prompt
+      handleCopyPrompt(prompt);
       
       if (onPromptGenerated) {
         onPromptGenerated(prompt);
       }
-    }
+    //}
   };
   
   // Copiar o prompt para a área de transferência
-  const handleCopyPrompt = async () => {
-    if (generatedPrompt) {
-      const success = await copyPromptToClipboard(generatedPrompt);
-      if (success) {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      }
+  const handleCopyPrompt = async (prompt:string) => {
+    const success = await copyPromptToClipboard(prompt);
+    if (success) {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
     }
   };
   
@@ -249,63 +283,41 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); handleGeneratePrompt(); }}>
-
-          {template.inputs.map(renderInputField)}
-          
-          <Button 
-            type="submit" 
-            leftSection={<IconWand size={16} />}
-            variant="light"
-            color="blue"
-            mt="md"
-          >
-            Gerar Prompt
-          </Button>
-
+        {template.inputs.map(renderInputField)}
+        <Button 
+          type="submit" 
+          leftSection={isCopied ? <IconClipboardCheck size={16} /> : <IconWand size={16} />}
+          variant="light"
+          color={isCopied ? "green" : "blue"}
+          mt="md"
+        >
+          {isCopied ? "Prompt gerado e copiado!" : "Gerar Prompt"}
+        </Button>
       </form>
-
       
-      {generatedPrompt && evaluation && (
-        <Card p="md" radius="md" withBorder>
-          <Group position="apart" mb="md">
-            <Text fw={500}>Prompt Gerado</Text>
-            <Button
-              leftSection={isCopied ? <IconClipboardCheck size={16} /> : undefined}
-              variant="subtle"
-              color={isCopied ? "green" : "blue"}
-              onClick={handleCopyPrompt}
-            >
-              {isCopied ? "Copiado!" : "Copiar para área de transferência"}
-            </Button>
-          </Group>
-          
-          <Group mb="md">
-            <Badge color={evaluation.isWithinLimits ? "green" : "red"}>
-              {evaluation.tokens} tokens
-            </Badge>
-            <Badge color="blue">{evaluation.chars} caracteres</Badge>
-          </Group>
-          
-          {evaluation.warnings.length > 0 && (
-            <Alert icon={<IconAlertCircle size={16} />} color="yellow" mb="md">
-              <Stack>
-                {evaluation.warnings.map((warning, i) => (
-                  <Text key={i} size="sm">{warning}</Text>
-                ))}
-              </Stack>
-            </Alert>
-          )}
-          
-          {evaluation.errors.length > 0 && (
-            <Alert icon={<IconAlertCircle size={16} />} color="red" mb="md">
-              <Stack>
+      {generatedPrompt && (
+        <>
+        <Card p="md" radius="md" withBorder mt="md">
+          <Stack gap={2}>
+            {evaluation.errors.length > 0 && (
+              <>
                 {evaluation.errors.map((error, i) => (
                   <Text key={i} size="sm">{error}</Text>
                 ))}
-              </Stack>
-            </Alert>
-          )}
-          
+              </>
+            )}
+            <Text size="sm">✔️ O prompt foi gerado e copiado para a área de transferência.</Text>
+          </Stack>
+
+          <Group mt={10} spacing="xs">
+            <Badge color={evaluation.isWithinLimits ? "green" : "red"}>
+              ~{evaluation.tokens} tokens
+            </Badge>
+            {!evaluation.isWithinLimits && (<Text size='sm'>⚠️ Considere dividir a revisão em dois textos.</Text>)}
+          </Group>
+
+          {/* 
+          <br />
           <Textarea
             value={generatedPrompt}
             minRows={8}
@@ -318,16 +330,9 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
               },
             }}
           />
-          
-          <Transition mounted={!evaluation.isWithinLimits} transition="fade" duration={200}>
-            {(styles) => (
-              <Text style={styles} size="sm" color="red" mt="xs">
-                ⚠️ Este prompt excede o limite de {CHATGPT_TOKEN_LIMIT} tokens do ChatGPT. 
-                Considere reduzir o tamanho do texto ou dividir em múltiplos prompts.
-              </Text>
-            )}
-          </Transition>
+          */}
         </Card>
+        </>
       )}
     </>
   );

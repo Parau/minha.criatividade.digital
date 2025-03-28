@@ -28,6 +28,10 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
   const form = useForm({
     initialValues,
     validate: template.validateInputs,
+    onValuesChange: (values) => {
+      // Apaga o prompt gerado pois com alteração de formulário será necessário gerar o prompt novamente
+      setGeneratedPrompt("");
+    }
   });
   
   // Renderizar campo de entrada baseado no tipo
@@ -251,6 +255,9 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
 
       setGeneratedPrompt(prompt);
       setEvaluation(evaluatePrompt(prompt, formValues, template));
+
+      //Antes a cópia estava separada em outro botão, mas agora está dentro do botão de gerar prompt
+      handleCopyPrompt(prompt);
       
       if (onPromptGenerated) {
         onPromptGenerated(prompt);
@@ -259,13 +266,11 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
   };
   
   // Copiar o prompt para a área de transferência
-  const handleCopyPrompt = async () => {
-    if (generatedPrompt) {
-      const success = await copyPromptToClipboard(generatedPrompt);
-      if (success) {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      }
+  const handleCopyPrompt = async (prompt:string) => {
+    const success = await copyPromptToClipboard(prompt);
+    if (success) {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
     }
   };
   
@@ -278,50 +283,40 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); handleGeneratePrompt(); }}>
-
-          {template.inputs.map(renderInputField)}
-          
-          <Button 
-            type="submit" 
-            leftSection={<IconWand size={16} />}
-            variant="light"
-            color="blue"
-            mt="md"
-          >
-            Gerar Prompt
-          </Button>
-
+        {template.inputs.map(renderInputField)}
+        <Button 
+          type="submit" 
+          leftSection={isCopied ? <IconClipboardCheck size={16} /> : <IconWand size={16} />}
+          variant="light"
+          color={isCopied ? "green" : "blue"}
+          mt="md"
+        >
+          {isCopied ? "Prompt gerado e copiado!" : "Gerar Prompt"}
+        </Button>
       </form>
       
-      {generatedPrompt && evaluation && (
+      {generatedPrompt && (
         <>
-        <br />
-        <Card p="md" radius="md" withBorder>
-          <Group position="apart" mb="md">
-            <Text fw={500}>Prompt Gerado</Text>
-            <Button
-              leftSection={isCopied ? <IconClipboardCheck size={16} /> : undefined}
-              variant="subtle"
-              color={isCopied ? "green" : "blue"}
-              onClick={handleCopyPrompt}
-            >
-              {isCopied ? "Copiado!" : "Copiar para área de transferência"}
-            </Button>
-          </Group>
-         
-          {evaluation.errors.length > 0 && (
-            <Stack gap={2}>
-              {evaluation.errors.map((error, i) => (
-                <Text key={i} size="sm">{error}</Text>
-              ))}
-              <Text size="sm">✔️ O prompt foi copiado para a área de transferência.</Text>
-            </Stack>
-          )}
-          <Stack mt={10}>
-            <Badge color={evaluation.isWithinLimits ? "green" : "red"}>
-              {evaluation.tokens} tokens
-            </Badge>
+        <Card p="md" radius="md" withBorder mt="md">
+          <Stack gap={2}>
+            {evaluation.errors.length > 0 && (
+              <>
+                {evaluation.errors.map((error, i) => (
+                  <Text key={i} size="sm">{error}</Text>
+                ))}
+              </>
+            )}
+            <Text size="sm">✔️ O prompt foi gerado e copiado para a área de transferência.</Text>
           </Stack>
+
+          <Group mt={10} spacing="xs">
+            <Badge color={evaluation.isWithinLimits ? "green" : "red"}>
+              ~{evaluation.tokens} tokens
+            </Badge>
+            {!evaluation.isWithinLimits && (<Text size='sm'>⚠️ Considere dividir a revisão em dois textos.</Text>)}
+          </Group>
+
+          {/* 
           <br />
           <Textarea
             value={generatedPrompt}
@@ -335,15 +330,7 @@ export function PromptBuilder({ template, onPromptGenerated, textToReview }: Pro
               },
             }}
           />
-          
-          <Transition mounted={!evaluation.isWithinLimits} transition="fade" duration={200}>
-            {(styles) => (
-              <Text style={styles} size="sm" color="red" mt="xs">
-                ⚠️ Este prompt excede o limite de {CHATGPT_TOKEN_LIMIT} tokens do ChatGPT. 
-                Considere reduzir o tamanho do texto ou dividir em múltiplos prompts.
-              </Text>
-            )}
-          </Transition>
+          */}
         </Card>
         </>
       )}
